@@ -2964,9 +2964,9 @@ class VPMonotonicPHIRecipe : public VPHeaderPHIRecipe {
   MonotonicDescriptor Desc;
 
 public:
-  VPMonotonicPHIRecipe(PHINode *Phi, const MonotonicDescriptor &Desc,
+  VPMonotonicPHIRecipe(PHINode &Phi, const MonotonicDescriptor &Desc,
                        VPValue &Start, VPValue &BackedgeValue)
-      : VPHeaderPHIRecipe(VPRecipeBase::VPMonotonicPHISC, Phi, &Start),
+      : VPHeaderPHIRecipe(VPRecipeBase::VPMonotonicPHISC, &Phi, &Start),
         Desc(Desc) {
 
     addOperand(&BackedgeValue);
@@ -2975,10 +2975,8 @@ public:
   ~VPMonotonicPHIRecipe() override = default;
 
   VPMonotonicPHIRecipe *clone() override {
-    auto *R =
-        new VPMonotonicPHIRecipe(cast<PHINode>(getUnderlyingInstr()), Desc,
-                                 *getStartValue(), *getBackedgeValue());
-    return R;
+    return new VPMonotonicPHIRecipe(*getPHINode(), Desc, *getStartValue(),
+                                    *getBackedgeValue());
   }
 
   VP_CLASSOF_IMPL(VPRecipeBase::VPMonotonicPHISC)
