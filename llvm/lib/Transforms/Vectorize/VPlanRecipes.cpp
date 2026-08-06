@@ -1231,7 +1231,6 @@ InstructionCost VPRecipeWithIRFlags::getCostForRecipeWithOpcode(
         return ReplicateRecipe->isPredicated() ? TTI::CastContextHint::Masked
                                                : TTI::CastContextHint::Normal;
       }
-
       const auto *WidenMemoryRecipe = dyn_cast<VPWidenMemoryRecipe>(R);
       if (WidenMemoryRecipe == nullptr)
         return TTI::CastContextHint::None;
