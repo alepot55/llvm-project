@@ -392,9 +392,6 @@ public:
   /// loop. Do not use after invoking 'createVectorizedLoopSkeleton' (PR34965).
   LLVM_ABI int isConsecutivePtr(Type *AccessTy, Value *Ptr) const;
 
-  /// Check if memory access is compressed when vectorizing.
-  bool isCompressedPtr(Type *AccessTy, Value *Ptr, BasicBlock *BB) const;
-
   /// Returns true if \p V is invariant across all loop iterations according to
   /// SCEV.
   LLVM_ABI bool isInvariant(Value *V) const;
@@ -486,6 +483,12 @@ public:
 
   /// Returns a list of all known histogram operations in the loop.
   bool hasHistograms() const { return !Histograms.empty(); }
+
+  /// Returns true if \p I is a compressed load or store (which can map to a
+  /// llvm.masked.expandload or llvm.masked.compressstore).
+  bool isCompressedLoadOrStore(const Instruction *I) const {
+    return CompressedMemoryOps.contains(I);
+  }
 
   PredicatedScalarEvolution *getPredicatedScalarEvolution() const {
     return &PSE;
@@ -657,6 +660,9 @@ private:
   /// better choice for the main induction than the existing one.
   void addInductionPhi(PHINode *Phi, const InductionDescriptor &ID);
 
+  /// Check if memory access is compressed when vectorizing.
+  bool isCompressedPtr(Type *AccessTy, Value *Ptr, BasicBlock *AccessBB) const;
+
   /// The loop that we evaluate.
   Loop *TheLoop;
 
@@ -740,6 +746,10 @@ private:
   /// load -> update -> store instructions where multiple lanes in a vector
   /// may work on the same memory location.
   SmallVector<HistogramInfo, 1> Histograms;
+
+  /// Contains all identified compressed loads/stores. This are loads/stores to
+  /// a 'compressed' pointer as defined by isCompressedPtr.
+  SmallPtrSet<const Instruction *, 8> CompressedMemoryOps;
 
   /// Whether or not creating SCEV predicates is allowed.
   bool AllowRuntimeSCEVChecks;

@@ -78,6 +78,11 @@ public:
   /// scalar loop.
   VPHistogramRecipe *widenIfHistogram(VPInstruction *VPI);
 
+  /// If \p VPI represents a compressed memory operation (as determined by
+  /// LoopVectorizationLegality) widen it by emitting an llvm.masked.expandload
+  /// or llvm.masked.compresstore (for loads and stores respectively).
+  VPWidenMemIntrinsicRecipe *widenIfCompressedMemoryOp(VPInstruction *VPI);
+
   /// If \p VPI is a store of a reduction into an invariant address, delete it.
   /// If it is the final store of a reduction result, a uniform store recipe
   /// will be created for it in the middle block. Returns `true` if replacement
