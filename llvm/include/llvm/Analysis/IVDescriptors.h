@@ -495,6 +495,12 @@ public:
 
   MonotonicDescriptor() = default;
 
+  MonotonicDescriptor(SmallPtrSetImpl<PHINode *> &Chain, Instruction *StepInst,
+                      Edge PredEdge, const SCEV *Expr)
+      : Chain(llvm::from_range, Chain), StepInst(StepInst), PredEdge(PredEdge) {
+    setSCEV(Expr);
+  }
+
   /// Returns the PHIs that feed into the backedge of the monotonic PHI.
   const SmallPtrSetImpl<PHINode *> &getChain() const { return Chain; }
 
