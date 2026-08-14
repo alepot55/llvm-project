@@ -490,8 +490,7 @@ bool LoopVectorizationLegality::isCompressedPtr(Type *AccessTy, Value *Ptr,
     return false;
 
   // Check if pointer step equals access size.
-  auto *Step =
-      dyn_cast<SCEVConstant>(Desc.getExpr()->getStepRecurrence(*PSE.getSE()));
+  SCEVUse Step = Desc.getExpr()->getStepRecurrence(*PSE.getSE());
   return Step == PSE.getSE()->getSizeOfExpr(Step->getType(), AccessTy);
 }
 
