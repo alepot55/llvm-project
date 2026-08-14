@@ -1324,29 +1324,6 @@ define dso_local ptr @lea_dso_local_ifunc() #0 {
   ret ptr @dso_local_ifunc_func
 }
 
-; FIXME: The result is same for small, medium and large model, because we
-; specify pie option in the test case. And the type of tls is initial exec tls.
-; For pic code. The large model code for pic tls should be emitted as below.
-
-; .L3:
-; leaq	.L3(%rip), %rbx
-; movabsq	$_GLOBAL_OFFSET_TABLE_-.L3, %r11
-; addq	%r11, %rbx
-; leaq	thread_data@TLSGD(%rip), %rdi
-; movabsq	$__tls_get_addr@PLTOFF, %rax
-; addq	%rbx, %rax
-; call	*%rax
-; movl	(%rax), %eax
-
-; The medium and small model code for pic tls should be emitted as below.
-; data16
-; leaq	thread_data@TLSGD(%rip), %rdi
-; data16
-; data16
-; rex64
-; callq	__tls_get_addr@PLT
-; movl	(%rax), %eax
-
 define dso_local i32 @load_thread_data() #0 {
 ; CHECK-LABEL: load_thread_data:
 ; CHECK:       # %bb.0:
