@@ -65,21 +65,26 @@ jobs:
       - name: Write the reduced cases
         run: |
           mkdir -p /tmp/repro
+          # Round 1 used shrinking result shapes, so the generic per-axis loop in
+          # verifyScatterOrSliceOperandAndResultShape rejected them before the axis
+          # was ever used. With an out-of-range tensorAxis that loop compares EVERY
+          # axis, so operand and result must have the SAME shape to get past it and
+          # reach getDimSize(tensorAxis).
           cat > /tmp/repro/scatter.mlir <<'EOM'
           shard.grid @grid0(shape = 2x2x4)
-          func.func @scatter_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x1xf32> {
+          func.func @scatter_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x4xf32> {
             %0 = shard.scatter %arg0 on @grid0 grid_axes = [2]
               scatter_dim = 5 root = [1]
-              : (tensor<3x4xf32>) -> tensor<3x1xf32>
-            return %0 : tensor<3x1xf32>
+              : (tensor<3x4xf32>) -> tensor<3x4xf32>
+            return %0 : tensor<3x4xf32>
           }
           EOM
           cat > /tmp/repro/all_slice.mlir <<'EOM'
           shard.grid @grid0(shape = 2x2x4)
-          func.func @all_slice_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x1xf32> {
+          func.func @all_slice_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x4xf32> {
             %0 = shard.all_slice %arg0 on @grid0 grid_axes = [2] slice_axis = 5
-              : tensor<3x4xf32> -> tensor<3x1xf32>
-            return %0 : tensor<3x1xf32>
+              : tensor<3x4xf32> -> tensor<3x4xf32>
+            return %0 : tensor<3x4xf32>
           }
           EOM
           cat > /tmp/repro/all_to_all.mlir <<'EOM'
@@ -93,19 +98,27 @@ jobs:
           EOM
           cat > /tmp/repro/reduce_scatter.mlir <<'EOM'
           shard.grid @grid0(shape = 2x2x4)
-          func.func @reduce_scatter_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x1xf64> {
+          func.func @reduce_scatter_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x4xf64> {
             %0 = shard.reduce_scatter %arg0 on @grid0 grid_axes = [2]
               reduction = max scatter_dim = 5
-              : tensor<3x4xf32> -> tensor<3x1xf64>
-            return %0 : tensor<3x1xf64>
+              : tensor<3x4xf32> -> tensor<3x4xf64>
+            return %0 : tensor<3x4xf64>
+          }
+          EOM
+          cat > /tmp/repro/gather.mlir <<'EOM'
+          shard.grid @grid0(shape = 2x2x4)
+          func.func @gather_axis_out_of_bounds(%arg0 : tensor<3x4xf32>) -> tensor<3x4xf32> {
+            %0 = shard.gather %arg0 on @grid0 grid_axes = [2] gather_axis = 5 root = [1]
+              : (tensor<3x4xf32>) -> tensor<3x4xf32>
+            return %0 : tensor<3x4xf32>
           }
           EOM
           sed -i 's/^          //' /tmp/repro/*.mlir
-          head -20 /tmp/repro/scatter.mlir
+          echo "--- scatter.mlir ---"; cat /tmp/repro/scatter.mlir
 
       - name: Run them
         run: |
-          for f in scatter all_slice all_to_all reduce_scatter; do
+          for f in scatter all_slice all_to_all reduce_scatter gather; do
             echo "=============== $f ==============="
             set +e
             ./build/bin/mlir-opt /tmp/repro/$f.mlir -o /dev/null 2>/tmp/repro/$f.err
@@ -114,15 +127,3 @@ jobs:
             head -6 /tmp/repro/$f.err
             echo
           done
-          echo "=== control: gather, which already bounds-checks ==="
-          echo 'shard.grid @grid0(shape = 2x2x4)
-          func.func @gather_axis_out_of_bounds(%arg0 : tensor<3x1xf32>) -> tensor<3x4xf32> {
-            %0 = shard.gather %arg0 on @grid0 grid_axes = [2] gather_axis = 5 root = [1]
-              : (tensor<3x1xf32>) -> tensor<3x4xf32>
-            return %0 : tensor<3x4xf32>
-          }' > /tmp/repro/gather.mlir
-          set +e
-          ./build/bin/mlir-opt /tmp/repro/gather.mlir -o /dev/null 2>/tmp/repro/gather.err
-          echo "rc=$?"
-          set -e
-          head -4 /tmp/repro/gather.err
