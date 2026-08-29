@@ -3,6 +3,8 @@
 name: shard-axis-repro
 
 on:
+  push:
+    branches: [ci/shard-repro]
   workflow_dispatch:
 
 jobs:
