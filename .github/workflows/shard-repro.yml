@@ -49,7 +49,7 @@ jobs:
         run: |
           export CCACHE_DIR=~/.ccache
           ccache -z
-          ninja -C build mlir-opt
+          ninja -C build mlir-opt mlir-opt FileCheck not
           ccache -s | head -5
 
       - name: Provenance
@@ -127,3 +127,11 @@ jobs:
             head -6 /tmp/repro/$f.err
             echo
           done
+
+      - name: check-mlir-dialect-shard
+        run: |
+          ninja -C build check-mlir-dialect-shard 2>&1 | tail -25
+
+      - name: check-mlir
+        run: |
+          ninja -C build check-mlir 2>&1 | tail -30
