@@ -19,6 +19,7 @@ add_mlir_dialect_library(MLIRAffineDialect
   MLIRIR
   MLIRInferIntDivisibilityOpInterface
   MLIRInferIntRangeInterface
+  MLIRInferUniformityOpInterface
   MLIRInferTypeOpInterface
   MLIRLoopLikeInterface
   MLIRMemRefDialect

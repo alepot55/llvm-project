@@ -114,6 +114,7 @@ void registerTestLinalgGreedyFusion();
 void registerTestLinalgRankReduceContractionOps();
 void registerTestLinalgTransforms();
 void registerTestLivenessAnalysisPass();
+void registerTestUniformityAnalysisPass();
 void registerTestLivenessPass();
 void registerTestLLVMLegalizePatternsPass();
 void registerTestLoopFusion();
@@ -264,6 +265,7 @@ static void registerTestPasses() {
   mlir::test::registerTestLinalgRankReduceContractionOps();
   mlir::test::registerTestLinalgTransforms();
   mlir::test::registerTestLivenessAnalysisPass();
+  mlir::test::registerTestUniformityAnalysisPass();
   mlir::test::registerTestLivenessPass();
   mlir::test::registerTestLLVMLegalizePatternsPass();
   mlir::test::registerTestLoopFusion();

@@ -28,6 +28,7 @@ include "mlir/Interfaces/DataLayoutInterfaces.td"
 include "mlir/IR/OpAsmInterface.td"
 include "mlir/Interfaces/FunctionInterfaces.td"
 include "mlir/Interfaces/InferIntRangeInterface.td"
+include "mlir/Interfaces/InferUniformityOpInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
@@ -42,6 +43,7 @@ class GPU_IndexOp<string mnemonic, list<Trait> traits = []> :
     GPU_Op<mnemonic, !listconcat(traits, [
         Pure,
         DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+        DeclareOpInterfaceMethods<InferUniformityOpInterface>,
         DeclareOpInterfaceMethods<OpAsmOpInterface, ["getAsmResultNames"]>])>,
     Arguments<(ins GPU_DimensionAttr:$dimension,
                    OptionalAttr<IndexAttr>:$upper_bound)>, Results<(outs Index)> {
@@ -231,7 +233,8 @@ def GPU_ThreadIdOp : GPU_IndexOp<"thread_id"> {
 }
 
 def GPU_LaneIdOp : GPU_Op<"lane_id", [
-      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>]> {
+      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+      DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let description = [{
     Returns the lane id within the subgroup (warp/wave).
 
@@ -251,7 +254,8 @@ def GPU_LaneIdOp : GPU_Op<"lane_id", [
 }
 
 def GPU_SubgroupIdOp : GPU_Op<"subgroup_id", [
-      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>]>,
+      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+      DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins OptionalAttr<IndexAttr>:$upper_bound)>,
     Results<(outs Index:$result)> {
   let description = [{
@@ -293,7 +297,8 @@ def GPU_GlobalIdOp : GPU_IndexOp<"global_id"> {
 
 
 def GPU_NumSubgroupsOp : GPU_Op<"num_subgroups", [
-      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>]>,
+      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+      DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins OptionalAttr<IndexAttr>:$upper_bound)>,
     Results<(outs Index:$result)> {
   let description = [{
@@ -314,7 +319,8 @@ def GPU_NumSubgroupsOp : GPU_Op<"num_subgroups", [
 }
 
 def GPU_SubgroupSizeOp : GPU_Op<"subgroup_size", [
-      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>]>,
+      Pure, DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+      DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins OptionalAttr<IndexAttr>:$upper_bound)>,
     Results<(outs Index:$result)> {
   let description = [{
@@ -348,7 +354,8 @@ def GPU_OptionalDimSizeHintAttr : ConfinedAttr<OptionalAttr<DenseI32ArrayAttr>,
 def GPU_GPUFuncOp : GPU_Op<"func", [
     HasParent<"GPUModuleOp">, AutomaticAllocationScope, SymbolName,
     SymbolVisibility, FunctionOpInterface,
-    IsolatedFromAbove, AffineScope
+    IsolatedFromAbove, AffineScope,
+    DeclareOpInterfaceMethods<InferUniformityOpInterface>
   ]> {
   let summary = "Function executable on a GPU";
 
@@ -810,6 +817,7 @@ def GPU_LaunchFuncOp :GPU_Op<"launch_func", [
 def GPU_LaunchOp : GPU_Op<"launch", [
       AffineScope, AutomaticAllocationScope, AttrSizedOperandSegments,
       DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
+      DeclareOpInterfaceMethods<InferUniformityOpInterface>,
       GPU_AsyncOpInterface, RecursiveMemoryEffects]>,
     Arguments<(ins Variadic<GPU_AsyncToken>:$asyncDependencies,
                Index:$gridSizeX, Index:$gridSizeY, Index:$gridSizeZ,
@@ -1178,7 +1186,8 @@ def GPU_AllReduceOperationAttr : EnumAttr<GPU_Dialect, GPU_AllReduceOperation,
                                           "all_reduce_op">;
 
 def GPU_AllReduceOp : GPU_Op<"all_reduce",
-    [SameOperandsAndResultType, IsolatedFromAbove]> {
+    [SameOperandsAndResultType, IsolatedFromAbove,
+     DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = "Reduce values among workgroup.";
   let description = [{
     The `all_reduce` op reduces the value of every work item across a local
@@ -1226,7 +1235,9 @@ def GPU_AllReduceOp : GPU_Op<"all_reduce",
 def AnyIntegerOrFloatOr1DVector :
   AnyTypeOf<[AnyIntegerOrFloat, FixedVectorOfRankAndType<[1], [AnyIntegerOrFloat]>]>;
 
-def GPU_SubgroupReduceOp : GPU_Op<"subgroup_reduce", [SameOperandsAndResultType, NoMemoryEffect]> {
+def GPU_SubgroupReduceOp : GPU_Op<"subgroup_reduce",
+    [SameOperandsAndResultType, NoMemoryEffect,
+     DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = "Reduce values among subgroup.";
   let description = [{
     The `subgroup_reduce` op reduces the values of lanes (work items) across a
@@ -1320,7 +1331,8 @@ def GPU_ShuffleModeAttr : EnumAttr<GPU_Dialect, GPU_ShuffleMode,
                                    "shuffle_mode">;
 
 def GPU_ShuffleOp : GPU_Op<
-    "shuffle", [Pure, AllTypesMatch<["value", "shuffleResult"]>]>,
+    "shuffle", [Pure, AllTypesMatch<["value", "shuffleResult"]>,
+                DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins AnyIntegerOrFloatOr1DVector:$value, I32:$offset, I32:$width,
                GPU_ShuffleModeAttr:$mode)>,
     Results<(outs AnyIntegerOrFloatOr1DVector:$shuffleResult, I1:$valid)> {
@@ -1389,7 +1401,8 @@ def GPU_ShuffleOp : GPU_Op<
 }
 
 def GPU_RotateOp : GPU_Op<
-    "rotate", [Pure, AllTypesMatch<["value", "rotateResult"]>]>,
+    "rotate", [Pure, AllTypesMatch<["value", "rotateResult"]>,
+               DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins AnyIntegerOrFloatOr1DVector:$value,
                    ConfinedAttr<I32Attr, [IntMinValue<0>]>:$offset,
                    ConfinedAttr<I32Attr, [IntPowerOf2]>:$width)>,
@@ -3200,6 +3213,7 @@ def GPU_SetCsrPointersOp : GPU_Op<"set_csr_pointers", [GPU_AsyncOpInterface]> {
 def GPU_WarpExecuteOnLane0Op : GPU_Op<"warp_execute_on_lane_0",
       [DeclareOpInterfaceMethods<RegionBranchOpInterface, [
           "areTypesCompatible", "getSuccessorInputs"]>,
+       DeclareOpInterfaceMethods<InferUniformityOpInterface>,
        SingleBlockImplicitTerminator<"gpu::YieldOp">,
        RecursiveMemoryEffects]> {
   let summary = "Executes operations in the associated region on thread #0 of a"
@@ -3349,7 +3363,8 @@ def GPU_BroadcastTypeAttr : EnumAttr<GPU_Dialect, GPU_BroadcastType, "broadcast"
 def GPU_SubgroupBroadcastOp : GPU_Op<"subgroup_broadcast",
     [NoMemoryEffect, AllTypesMatch<["result", "src"]>,
     DeclareOpInterfaceMethods<InferIntRangeInterface, ["inferResultRanges"]>,
-    DeclareOpInterfaceMethods<ConditionallySpeculatable, ["getSpeculatability"]>] #
+    DeclareOpInterfaceMethods<ConditionallySpeculatable, ["getSpeculatability"]>,
+    DeclareOpInterfaceMethods<InferUniformityOpInterface>] #
     ElementwiseMappable.traits>,
   Arguments<(ins AnyType:$src,
                  Optional<I32>:$lane,
@@ -3376,7 +3391,8 @@ def GPU_SubgroupBroadcastOp : GPU_Op<"subgroup_broadcast",
   let hasVerifier = 1;
 }
 
-def GPU_BallotOp : GPU_Op<"ballot", [NoMemoryEffect]>,
+def GPU_BallotOp : GPU_Op<"ballot", [NoMemoryEffect,
+    DeclareOpInterfaceMethods<InferUniformityOpInterface>]>,
     Arguments<(ins I1:$predicate)>,
     Results<(outs AnySignlessInteger:$result)> {
   let summary = "Collects predicate values from all threads in a subgroup.";
