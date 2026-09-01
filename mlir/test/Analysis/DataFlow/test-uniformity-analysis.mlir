@@ -159,16 +159,45 @@ gpu.module @while {
 
 // -----
 
-// Memory: a load is divergent unless an operation says otherwise; a load from
-// a thread-private allocation is always divergent.
+// Memory: a load from an address that is the same within a group observes the
+// same value within that group, unless the memory is thread-private. Any other
+// operation that reads memory is divergent.
 gpu.module @memory {
-  gpu.func @kernel(%m: memref<16xf32>) kernel {
+  gpu.func @kernel(%m: memref<16xf32>, %s: memref<16xf32, #gpu.address_space<workgroup>>) kernel {
     %c0 = arith.constant 0 : index
-    // expected-remark @below {{uniformity of "load": results = [divergent], execution = uniform}}
-    %v = memref.load %m[%c0] {tag = "load"} : memref<16xf32>
+    %tid = gpu.thread_id x
+    // expected-remark @below {{uniformity of "load_uni": results = [uniform], execution = uniform}}
+    %v0 = memref.load %m[%c0] {tag = "load_uni"} : memref<16xf32>
+    // expected-remark @below {{uniformity of "load_div": results = [divergent], execution = uniform}}
+    %v1 = memref.load %m[%tid] {tag = "load_div"} : memref<16xf32>
+    // expected-remark @below {{uniformity of "load_shared": results = [uniform], execution = uniform}}
+    %v2 = memref.load %s[%c0] {tag = "load_shared"} : memref<16xf32, #gpu.address_space<workgroup>>
     // expected-remark @below {{uniformity of "alloca": results = [divergent], execution = uniform}}
-    %p = memref.alloca() {tag = "alloca"} : memref<4xf32>
+    %p = memref.alloca() {tag = "alloca"} : memref<4xf32, #gpu.address_space<private>>
+    // expected-remark @below {{uniformity of "load_private": results = [divergent], execution = uniform}}
+    %v3 = memref.load %p[%c0] {tag = "load_private"} : memref<4xf32, #gpu.address_space<private>>
+    // expected-remark @below {{uniformity of "vload": results = [uniform], execution = uniform}}
+    %v4 = vector.load %m[%c0] {tag = "vload"} : memref<16xf32>, vector<4xf32>
+    // expected-remark @below {{uniformity of "atomic": results = [divergent], execution = uniform}}
+    %v5 = memref.atomic_rmw addf %v0, %m[%c0] {tag = "atomic"} : (f32, memref<16xf32>) -> f32
     gpu.return
+  }
+}
+
+// -----
+
+// A func.func marked gpu.kernel receives the same arguments on every thread;
+// the arguments of any other func.func are not known to be uniform.
+gpu.module @func_kernels {
+  func.func @kernel(%n: index) attributes {gpu.kernel} {
+    // expected-remark @below {{uniformity of "kernel_arg": results = [uniform], execution = uniform}}
+    %a = arith.addi %n, %n {tag = "kernel_arg"} : index
+    return
+  }
+  func.func @device(%n: index) {
+    // expected-remark @below {{uniformity of "device_arg": results = [divergent], execution = uniform}}
+    %a = arith.addi %n, %n {tag = "device_arg"} : index
+    return
   }
 }
 
