@@ -1,4 +1,4 @@
-//===- InferUniformityOpInterfaceImpl.cpp - Uniformity of memory ops ------===//
+//===- InferUniformityOpInterfaceImpl.cpp - Uniformity models ------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -25,8 +25,8 @@ static bool isThreadPrivate(Type type) {
   auto memRefType = dyn_cast<BaseMemRefType>(type);
   if (!memRefType)
     return false;
-  auto space = dyn_cast_if_present<gpu::AddressSpaceAttr>(
-      memRefType.getMemorySpace());
+  auto space =
+      dyn_cast_if_present<gpu::AddressSpaceAttr>(memRefType.getMemorySpace());
   return space && space.getValue() == gpu::AddressSpace::Private;
 }
 

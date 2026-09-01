@@ -30,8 +30,7 @@ StringRef mlir::stringifyUniformityScope(UniformityScope scope) {
   llvm_unreachable("unknown uniformity scope");
 }
 
-std::optional<UniformityScope>
-mlir::symbolizeUniformityScope(StringRef name) {
+std::optional<UniformityScope> mlir::symbolizeUniformityScope(StringRef name) {
   return llvm::StringSwitch<std::optional<UniformityScope>>(name)
       .Case("divergent", UniformityScope::Divergent)
       .Case("subgroup", UniformityScope::Subgroup)

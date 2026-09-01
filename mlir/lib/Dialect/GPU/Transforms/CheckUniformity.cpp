@@ -63,8 +63,7 @@ struct GpuCheckUniformityPass
     auto checkExecution = [&](Operation *op, UniformityScope required,
                               StringRef what) {
       Value narrowing;
-      UniformityScope actual =
-          getExecutionUniformity(solver, op, &narrowing);
+      UniformityScope actual = getExecutionUniformity(solver, op, &narrowing);
       if (actual >= required)
         return;
       InFlightDiagnostic diag = op->emitError()

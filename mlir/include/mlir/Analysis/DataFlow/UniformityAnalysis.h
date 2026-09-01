@@ -91,9 +91,9 @@ public:
   /// At an entry point, a value is divergent.
   void setToEntryState(UniformityLattice *lattice) override;
 
-  LogicalResult
-  visitOperation(Operation *op, ArrayRef<const UniformityLattice *> operands,
-                 ArrayRef<UniformityLattice *> results) override;
+  LogicalResult visitOperation(Operation *op,
+                               ArrayRef<const UniformityLattice *> operands,
+                               ArrayRef<UniformityLattice *> results) override;
 
   /// Infers block arguments and results that region control flow does not
   /// forward a value to (loop induction variables, the body arguments of
@@ -106,17 +106,18 @@ public:
 protected:
   /// Lets a callable implementing `InferUniformityOpInterface` (a GPU kernel)
   /// describe the uniformity of its arguments.
-  void
-  visitCallableOperation(CallableOpInterface callable,
-                         ArrayRef<AbstractSparseLattice *> argLattices) override;
+  void visitCallableOperation(
+      CallableOpInterface callable,
+      ArrayRef<AbstractSparseLattice *> argLattices) override;
 
   /// Joins the forwarded values as usual, then adds the control dependence on
   /// the operands steering the region branch; or defers entirely to
   /// `InferUniformityOpInterface` when the operation implements it for the
   /// successor being visited.
-  void visitRegionSuccessors(ProgramPoint *point, RegionBranchOpInterface branch,
-                             RegionSuccessor successor,
-                             ArrayRef<AbstractSparseLattice *> lattices) override;
+  void
+  visitRegionSuccessors(ProgramPoint *point, RegionBranchOpInterface branch,
+                        RegionSuccessor successor,
+                        ArrayRef<AbstractSparseLattice *> lattices) override;
 
 private:
   /// Returns true if `op` belongs to a transparent dialect.

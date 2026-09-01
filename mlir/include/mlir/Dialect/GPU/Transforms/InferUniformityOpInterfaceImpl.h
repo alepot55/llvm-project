@@ -1,4 +1,4 @@
-//===- InferUniformityOpInterfaceImpl.h - Uniformity of memory ops -*- C++ -*-===//
+//===- InferUniformityOpInterfaceImpl.h - Uniformity models -----*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -19,7 +19,8 @@ namespace gpu {
 /// group of threads observes the same value within that group unless the
 /// memory is thread-private, and the arguments of a `func.func` marked
 /// `gpu.kernel` are the same for every thread.
-void registerInferUniformityOpInterfaceExternalModels(DialectRegistry &registry);
+void registerInferUniformityOpInterfaceExternalModels(
+    DialectRegistry &registry);
 } // namespace gpu
 } // namespace mlir
 

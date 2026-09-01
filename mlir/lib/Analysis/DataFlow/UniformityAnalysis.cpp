@@ -33,15 +33,16 @@ static void markForwarded(OperandRange range, llvm::SmallBitVector &forwarded) {
     forwarded.set(begin + i);
 }
 
-void mlir::dataflow::getControlOperands(Operation *op,
-                                        SmallVectorImpl<Value> &controlOperands) {
+void mlir::dataflow::getControlOperands(
+    Operation *op, SmallVectorImpl<Value> &controlOperands) {
   llvm::SmallBitVector forwarded(op->getNumOperands());
   if (auto branch = dyn_cast<RegionBranchOpInterface>(op)) {
     SmallVector<RegionSuccessor> successors;
     branch.getSuccessorRegions(RegionBranchPoint::parent(), successors);
     for (const RegionSuccessor &successor : successors)
       markForwarded(branch.getEntrySuccessorOperands(successor), forwarded);
-  } else if (auto terminator = dyn_cast<RegionBranchTerminatorOpInterface>(op)) {
+  } else if (auto terminator =
+                 dyn_cast<RegionBranchTerminatorOpInterface>(op)) {
     SmallVector<Attribute> operandAttrs(op->getNumOperands(), nullptr);
     SmallVector<RegionSuccessor> successors;
     terminator.getSuccessorRegions(operandAttrs, successors);
@@ -75,7 +76,7 @@ static Operation *getBranchTerminator(Block &block) {
 //===----------------------------------------------------------------------===//
 
 static const StringRef kDefaultTransparentDialects[] = {
-    "affine", "arith",  "bufferization", "builtin", "cf",
+    "affine",  "arith", "bufferization", "builtin", "cf",
     "complex", "func",  "index",         "linalg",  "math",
     "memref",  "scf",   "tensor",        "ub",      "vector"};
 
@@ -124,30 +125,33 @@ llvm::SmallBitVector UniformityAnalysis::inferThroughInterface(
         return getLatticeElementFor(point, operand)->getValue();
       });
   llvm::SmallBitVector set(lattices.size());
-  op.inferUniformity(operandUniformity, [&](Value value, UniformityScope scope) {
-    auto it = llvm::find(candidates, value);
-    if (it == candidates.end())
-      return;
-    unsigned index = std::distance(candidates.begin(), it);
-    set.set(index);
-    auto *lattice = static_cast<UniformityLattice *>(lattices[index]);
-    LDBG() << "Inferred " << scope << " for " << value;
-    propagateIfChanged(lattice, lattice->join(Uniformity(scope)));
-  });
+  op.inferUniformity(
+      operandUniformity, [&](Value value, UniformityScope scope) {
+        auto it = llvm::find(candidates, value);
+        if (it == candidates.end())
+          return;
+        unsigned index = std::distance(candidates.begin(), it);
+        set.set(index);
+        auto *lattice = static_cast<UniformityLattice *>(lattices[index]);
+        LDBG() << "Inferred " << scope << " for " << value;
+        propagateIfChanged(lattice, lattice->join(Uniformity(scope)));
+      });
   return set;
 }
 
 /// Puts the lattices that `set` does not mark in the entry state.
 void UniformityAnalysis::setUnsetToEntryStates(
-    const llvm::SmallBitVector &set, ArrayRef<AbstractSparseLattice *> lattices) {
+    const llvm::SmallBitVector &set,
+    ArrayRef<AbstractSparseLattice *> lattices) {
   for (auto [index, lattice] : llvm::enumerate(lattices))
     if (!set.test(index))
       setToEntryState(static_cast<UniformityLattice *>(lattice));
 }
 
-LogicalResult UniformityAnalysis::visitOperation(
-    Operation *op, ArrayRef<const UniformityLattice *> operands,
-    ArrayRef<UniformityLattice *> results) {
+LogicalResult
+UniformityAnalysis::visitOperation(Operation *op,
+                                   ArrayRef<const UniformityLattice *> operands,
+                                   ArrayRef<UniformityLattice *> results) {
   if (auto inferrable = dyn_cast<InferUniformityOpInterface>(op)) {
     SmallVector<AbstractSparseLattice *> resultLattices(results.begin(),
                                                         results.end());
@@ -167,9 +171,10 @@ LogicalResult UniformityAnalysis::visitOperation(
 
   Uniformity joined = Uniformity::getUniform();
   if (!operands.empty()) {
-    joined = Uniformity::join(llvm::map_to_vector(
-        operands,
-        [](const UniformityLattice *lattice) { return lattice->getValue(); }));
+    joined = Uniformity::join(
+        llvm::map_to_vector(operands, [](const UniformityLattice *lattice) {
+          return lattice->getValue();
+        }));
     if (joined.isUninitialized())
       return success();
   }
@@ -203,14 +208,16 @@ void UniformityAnalysis::visitNonControlFlowArguments(
 }
 
 void UniformityAnalysis::visitCallableOperation(
-    CallableOpInterface callable, ArrayRef<AbstractSparseLattice *> argLattices) {
-  auto inferrable = dyn_cast<InferUniformityOpInterface>(callable.getOperation());
+    CallableOpInterface callable,
+    ArrayRef<AbstractSparseLattice *> argLattices) {
+  auto inferrable =
+      dyn_cast<InferUniformityOpInterface>(callable.getOperation());
   Region *body = callable.getCallableRegion();
   if (inferrable && body && !body->empty()) {
     Block &entry = body->front();
-    llvm::SmallBitVector set = inferThroughInterface(
-        inferrable, getProgramPointBefore(&entry), entry.getArguments(),
-        argLattices);
+    llvm::SmallBitVector set =
+        inferThroughInterface(inferrable, getProgramPointBefore(&entry),
+                              entry.getArguments(), argLattices);
     if (set.any()) {
       setUnsetToEntryStates(set, argLattices);
       return;
@@ -250,9 +257,8 @@ void UniformityAnalysis::visitRegionSuccessors(
     return;
   }
 
-  AbstractSparseForwardDataFlowAnalysis::visitRegionSuccessors(point, branch,
-                                                               successor,
-                                                               lattices);
+  AbstractSparseForwardDataFlowAnalysis::visitRegionSuccessors(
+      point, branch, successor, lattices);
   // Threads that take different paths through the regions reach the results
   // with different values; the entry block arguments of a region are only
   // observed by the threads that entered it together.

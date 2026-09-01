@@ -62,7 +62,9 @@ public:
   Uniformity() = default;
   Uniformity(UniformityScope scope) : scope(scope) {}
 
-  static Uniformity getUniform() { return Uniformity(UniformityScope::Uniform); }
+  static Uniformity getUniform() {
+    return Uniformity(UniformityScope::Uniform);
+  }
   static Uniformity getDivergent() {
     return Uniformity(UniformityScope::Divergent);
   }
