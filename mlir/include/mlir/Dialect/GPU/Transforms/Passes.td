@@ -307,4 +307,23 @@ def GpuXeVMAttachTarget : Pass<"xevm-attach-target", ""> {
               /*default=*/[{""}],
               "Command line options passed to downstream compiler">];
 }
+def GpuCheckUniformityPass : Pass<"gpu-check-uniformity"> {
+  let summary = "Report collective operations executed in divergent control "
+                "flow and operands that must be uniform";
+  let description = [{
+    Runs uniformity analysis and reports, as errors, the operations whose
+    semantics require all threads of a group to execute them together but
+    that sit in control flow steered by a value that differs within that
+    group: a `gpu.barrier` narrower than its scope (the classic deadlock), a
+    `gpu.all_reduce`, a `gpu.subgroup_reduce` marked `uniform`, and a
+    `gpu.warp_execute_on_lane_0`. Also reports operands that must be uniform
+    across the subgroup and are not: the width of a `gpu.shuffle` and the lane
+    of a `gpu.subgroup_broadcast`. A value captured from above by a
+    `gpu.warp_execute_on_lane_0` region that is not subgroup-uniform is
+    reported as a warning, since only lane 0's value is observable there.
+
+    The pass fails when it reports an error. It changes nothing.
+  }];
+}
+
 #endif // MLIR_DIALECT_GPU_PASSES

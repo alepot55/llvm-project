@@ -1,6 +1,7 @@
 add_mlir_dialect_library(MLIRGPUDialect
   IR/GPUDialect.cpp
   IR/InferIntRangeInterfaceImpls.cpp
+  IR/InferUniformityOpInterfaceImpls.cpp
   IR/ValueBoundsOpInterfaceImpl.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -19,6 +20,7 @@ add_mlir_dialect_library(MLIRGPUDialect
   MLIRControlFlowInterfaces
   MLIRFunctionInterfaces
   MLIRInferIntRangeInterface
+  MLIRInferUniformityOpInterface
   MLIRIR
   MLIRMathDialect
   MLIRMemRefDialect
@@ -30,6 +32,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   Transforms/AllReduceLowering.cpp
   Transforms/AsyncRegionRewriter.cpp
   Transforms/BufferDeallocationOpInterfaceImpl.cpp
+  Transforms/CheckUniformity.cpp
   Transforms/DecomposeMemRefs.cpp
   Transforms/EliminateBarriers.cpp
   Transforms/GlobalIdRewriter.cpp
@@ -59,6 +62,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   LINK_LIBS PUBLIC
   MLIRAMDGPUDialect
   MLIRAffineUtils
+  MLIRAnalysis
   MLIRArithDialect
   MLIRAsyncDialect
   MLIRBufferizationDialect
