@@ -32,6 +32,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   Transforms/AllReduceLowering.cpp
   Transforms/AsyncRegionRewriter.cpp
   Transforms/BufferDeallocationOpInterfaceImpl.cpp
+  Transforms/CheckUniformity.cpp
   Transforms/DecomposeMemRefs.cpp
   Transforms/EliminateBarriers.cpp
   Transforms/GlobalIdRewriter.cpp
@@ -61,6 +62,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   LINK_LIBS PUBLIC
   MLIRAMDGPUDialect
   MLIRAffineUtils
+  MLIRAnalysis
   MLIRArithDialect
   MLIRAsyncDialect
   MLIRBufferizationDialect

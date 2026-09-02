@@ -5849,6 +5849,7 @@ cc_library(
         ":AMDGPUUtils",
         ":AffineDialect",
         ":AffineUtils",
+        ":Analysis",
         ":ArithDialect",
         ":AsmParser",
         ":AsyncDialect",
