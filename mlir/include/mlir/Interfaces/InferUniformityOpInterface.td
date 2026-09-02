@@ -1,4 +1,4 @@
-//===- InferUniformityOpInterface.td - Uniformity inference -*- tablegen -*-===//
+//===- InferUniformityOpInterface.td - Uniformity inference *- tablegen -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -57,7 +57,19 @@ def InferUniformityOpInterface : OpInterface<"InferUniformityOpInterface"> {
     /*retTy=*/"void",
     /*methodName=*/"inferUniformity",
     /*args=*/(ins "::llvm::ArrayRef<::mlir::Uniformity>":$operandUniformity,
-                  "::mlir::SetUniformityFn":$setUniformity)>
+                  "::mlir::SetUniformityFn":$setUniformity)>,
+
+    InterfaceMethod<[{
+      Returns true if the regions of this operation are the entry of a SIMT
+      launch: the threads executing them are not the threads executing the
+      operation itself, so the control flow enclosing the operation does not
+      narrow the uniformity of their execution. `gpu.launch` returns true.
+    }],
+    /*retTy=*/"bool",
+    /*methodName=*/"isLaunchBoundary",
+    /*args=*/(ins),
+    /*methodBody=*/"",
+    /*defaultImplementation=*/[{ return false; }]>
   ];
 }
 

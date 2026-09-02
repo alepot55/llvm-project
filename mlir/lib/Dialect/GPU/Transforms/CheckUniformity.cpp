@@ -31,8 +31,6 @@ namespace mlir {
 using namespace mlir;
 using namespace mlir::dataflow;
 
-namespace {
-
 static UniformityScope toUniformityScope(gpu::BarrierScope scope) {
   switch (scope) {
   case gpu::BarrierScope::Subgroup:
@@ -44,6 +42,8 @@ static UniformityScope toUniformityScope(gpu::BarrierScope scope) {
   }
   llvm_unreachable("unknown barrier scope");
 }
+
+namespace {
 
 struct GpuCheckUniformityPass
     : public impl::GpuCheckUniformityPassBase<GpuCheckUniformityPass> {
@@ -115,6 +115,8 @@ struct GpuCheckUniformityPass
           .Case([&](gpu::WarpExecuteOnLane0Op warpOp) {
             checkExecution(warpOp, UniformityScope::Subgroup,
                            "'gpu.warp_execute_on_lane_0'");
+            if (!warnCapturedValues)
+              return;
             // Only lane 0's copy of a captured value is observable inside the
             // region, which is fine only when every lane holds the same.
             SetVector<Value> captured;

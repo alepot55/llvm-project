@@ -161,10 +161,12 @@ UniformityAnalysis::visitOperation(Operation *op,
     return success();
   }
 
-  // Only a memory-effect-free operation of a transparent dialect is known to
-  // compute a function of its operands. Anything else may read memory written
-  // by another thread, or thread identity.
-  if (!isTransparent(op) || !isMemoryEffectFree(op)) {
+  // Only a memory-effect-free operation of a transparent dialect that has no
+  // region is known to compute a function of its operands. Anything else may
+  // read memory written by another thread, thread identity, or a value its
+  // region captures from above.
+  if (!isTransparent(op) || !isMemoryEffectFree(op) ||
+      op->getNumRegions() != 0) {
     setAllToEntryStates(results);
     return success();
   }
@@ -252,7 +254,8 @@ void UniformityAnalysis::visitRegionSuccessors(
     }
   } else if (!isTransparent(op)) {
     // A region operation of an unknown dialect may run its regions with any
-    // subset of threads, and its results may come from anywhere.
+    // subset of threads, and its results may come from anywhere. (The typed
+    // overload of setAllToEntryStates hides the untyped one.)
     AbstractSparseForwardDataFlowAnalysis::setAllToEntryStates(lattices);
     return;
   }
@@ -355,6 +358,11 @@ mlir::dataflow::getExecutionUniformity(DataFlowSolver &solver, Operation *op,
 
     Operation *parent = region->getParentOp();
     if (!parent)
+      break;
+    // The body of a launch is executed by the threads of the launch, whatever
+    // control flow the host wrapped the launch in.
+    if (auto inferrable = dyn_cast<InferUniformityOpInterface>(parent);
+        inferrable && inferrable.isLaunchBoundary())
       break;
     if (isa<RegionBranchOpInterface>(parent)) {
       meetControlOperands(parent);

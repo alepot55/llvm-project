@@ -1,4 +1,4 @@
-// RUN: mlir-opt -split-input-file -gpu-check-uniformity -verify-diagnostics %s
+// RUN: mlir-opt -split-input-file -gpu-check-uniformity="warn-captured-values=true" -verify-diagnostics %s
 
 // A barrier in control flow that depends on the thread index: the deadlock
 // every GPU programmer has written once.
@@ -121,6 +121,22 @@ gpu.module @operands {
     %poison = gpu.subgroup_broadcast %v, specific_lane %v : i32
     gpu.return
   }
+}
+
+// -----
+
+// A launch under host control flow: the host condition does not narrow the
+// execution of the body.
+func.func @launch_under_host_if(%n: index, %go: i1) {
+  %c1 = arith.constant 1 : index
+  scf.if %go {
+    gpu.launch blocks(%bx, %by, %bz) in (%gx = %n, %gy = %c1, %gz = %c1)
+               threads(%tx, %ty, %tz) in (%sx = %n, %sy = %c1, %sz = %c1) {
+      gpu.barrier
+      gpu.terminator
+    }
+  }
+  return
 }
 
 // -----

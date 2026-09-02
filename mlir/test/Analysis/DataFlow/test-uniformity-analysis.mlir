@@ -186,6 +186,39 @@ gpu.module @memory {
 
 // -----
 
+// Kernel attributions: a workgroup buffer is shared by the workgroup, a private
+// buffer is per thread, whatever is done with the value.
+gpu.module @attributions {
+  gpu.func @kernel(%n: index)
+      workgroup(%ws: memref<4xf32, #gpu.address_space<workgroup>>)
+      private(%ps: memref<4xf32, #gpu.address_space<private>>) kernel {
+    // expected-remark @below {{uniformity of "ws_ptr": results = [workgroup], execution = uniform}}
+    %a = memref.extract_aligned_pointer_as_index %ws : memref<4xf32, #gpu.address_space<workgroup>> -> index {tag = "ws_ptr"}
+    // expected-remark @below {{uniformity of "ps_ptr": results = [divergent], execution = uniform}}
+    %b = memref.extract_aligned_pointer_as_index %ps : memref<4xf32, #gpu.address_space<private>> -> index {tag = "ps_ptr"}
+    gpu.return
+  }
+}
+
+// -----
+
+// An operation whose region captures a value from above without region
+// control flow is not a function of its operands: it is divergent.
+gpu.module @regions {
+  gpu.func @kernel(%n: index) kernel {
+    %tid = gpu.thread_id x
+    // expected-remark @below {{uniformity of "generate": results = [divergent], execution = uniform}}
+    %t = tensor.generate {
+    ^bb0(%i: index):
+      %v = arith.addi %i, %tid : index
+      tensor.yield %v : index
+    } {tag = "generate"} : tensor<4xindex>
+    gpu.return
+  }
+}
+
+// -----
+
 // A func.func marked gpu.kernel receives the same arguments on every thread;
 // the arguments of any other func.func are not known to be uniform.
 gpu.module @func_kernels {
@@ -230,9 +263,18 @@ gpu.module @cfg {
 
 // -----
 
-// gpu.launch body arguments, and a warp region.
-func.func @launch(%n: index) {
+// gpu.launch body arguments, and a warp region. The launch is under host
+// control flow, which does not narrow the execution of its body.
+func.func @launch(%n: index, %go: i1) {
   %c1 = arith.constant 1 : index
+  scf.if %go {
+    gpu.launch blocks(%bx, %by, %bz) in (%gx = %n, %gy = %c1, %gz = %c1)
+               threads(%tx, %ty, %tz) in (%sx = %n, %sy = %c1, %sz = %c1) {
+      // expected-remark @below {{uniformity of "in_launch": results = [], execution = uniform}}
+      gpu.barrier {tag = "in_launch"}
+      gpu.terminator
+    }
+  }
   gpu.launch blocks(%bx, %by, %bz) in (%gx = %n, %gy = %c1, %gz = %c1)
              threads(%tx, %ty, %tz) in (%sx = %n, %sy = %c1, %sz = %c1) {
     // expected-remark @below {{uniformity of "launch_bx": results = [workgroup], execution = uniform}}

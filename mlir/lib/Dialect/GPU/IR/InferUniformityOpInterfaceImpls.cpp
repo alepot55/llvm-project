@@ -97,16 +97,23 @@ void LaunchOp::inferUniformity(ArrayRef<Uniformity>,
     setDim3(setUniformity, *clusterIds, UniformityScope::Cluster);
 }
 
-/// Every thread of a launch receives the same kernel arguments, and the
-/// workgroup and private memory attributions are the same SSA values for
-/// every thread (loads from private memory are what differ).
+/// Every thread of a launch receives the same kernel arguments. A workgroup
+/// attribution is the same buffer for every thread of the workgroup; a private
+/// attribution is a different buffer for every thread.
 void GPUFuncOp::inferUniformity(ArrayRef<Uniformity>,
                                 SetUniformityFn setUniformity) {
   if (!isKernel())
     return;
-  for (BlockArgument argument : getBody().getArguments())
+  for (BlockArgument argument :
+       getBody().getArguments().take_front(getFunctionType().getNumInputs()))
     setUniformity(argument, UniformityScope::Uniform);
+  for (BlockArgument attribution : getWorkgroupAttributionBBArgs())
+    setUniformity(attribution, UniformityScope::Workgroup);
+  for (BlockArgument attribution : getPrivateAttributions())
+    setUniformity(attribution, UniformityScope::Divergent);
 }
+
+bool LaunchOp::isLaunchBoundary() { return true; }
 
 //===----------------------------------------------------------------------===//
 // Collectives

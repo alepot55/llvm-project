@@ -179,8 +179,8 @@ void mlir::registerAllDialects(DialectRegistry &registry) {
   cf::registerBufferizableOpInterfaceExternalModels(registry);
   cf::registerBufferDeallocationOpInterfaceExternalModels(registry);
   gpu::registerBufferDeallocationOpInterfaceExternalModels(registry);
-  gpu::registerInferUniformityOpInterfaceExternalModels(registry);
   gpu::registerIndexedAccessOpInterfaceExternalModels(registry);
+  gpu::registerInferUniformityOpInterfaceExternalModels(registry);
   gpu::registerValueBoundsOpInterfaceExternalModels(registry);
   LLVM::registerInlinerInterface(registry);
   linalg::registerAllDialectInterfaceImplementations(registry);

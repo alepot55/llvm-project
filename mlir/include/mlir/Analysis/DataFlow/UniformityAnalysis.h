@@ -45,13 +45,15 @@ public:
 ///
 /// - An operation implementing `InferUniformityOpInterface` describes the
 ///   uniformity of the values it defines itself.
-/// - A memory-effect-free operation of a *transparent* dialect computes a
-///   function of its operands, so its results are the join of the operands
-///   (uniform when it has none). The default set of transparent dialects is
-///   the one of the core dialects that have no notion of a thread.
+/// - A memory-effect-free operation without regions of a *transparent*
+///   dialect computes a function of its operands, so its results are the join
+///   of the operands (uniform when it has none). The default set of
+///   transparent dialects is the one of the core dialects that have no notion
+///   of a thread.
 /// - Any other operation defines divergent values: an operation that reads
-///   memory, and an operation of a dialect that may read thread identity
-///   without saying so through the interface.
+///   memory, an operation whose regions may capture values from above without
+///   region control flow (a `linalg.generic`), and an operation of a dialect
+///   that may read thread identity without saying so through the interface.
 /// - The results of an operation with region control flow are the join of the
 ///   values forwarded to them by region control flow, joined with the
 ///   uniformity of the operands that steer that control flow (the condition
@@ -165,7 +167,8 @@ UniformityScope getUniformity(DataFlowSolver &solver, Value value);
 /// Returns the widest group of threads that execute `op` together: the meet of
 /// the uniformity of the operands steering every enclosing region branch and
 /// every branch of a region with unstructured control flow, up to the closest
-/// enclosing callable. A `gpu.barrier` whose execution uniformity is narrower
+/// enclosing callable or launch boundary (see
+/// `InferUniformityOpInterface::isLaunchBoundary`). A `gpu.barrier` whose execution uniformity is narrower
 /// than its scope may deadlock. If `narrowingOperand` is given, it receives
 /// the first control operand that narrows the execution to the returned scope,
 /// or null when nothing does.

@@ -1,4 +1,4 @@
-//===- InferUniformityOpInterfaceImpl.cpp - Uniformity models ------------===//
+//===- InferUniformityOpInterfaceImpl.cpp - Uniformity models -------------===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -18,8 +18,6 @@
 
 using namespace mlir;
 
-namespace {
-
 /// Returns true if `type` is a memref in thread-private memory.
 static bool isThreadPrivate(Type type) {
   auto memRefType = dyn_cast<BaseMemRefType>(type);
@@ -29,6 +27,8 @@ static bool isThreadPrivate(Type type) {
       dyn_cast_if_present<gpu::AddressSpaceAttr>(memRefType.getMemorySpace());
   return space && space.getValue() == gpu::AddressSpace::Private;
 }
+
+namespace {
 
 /// A load observes, within a group of threads, the same value when every
 /// operand (the memory, the indices, a mask) is the same within the group and

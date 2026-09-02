@@ -318,12 +318,19 @@ def GpuCheckUniformityPass : Pass<"gpu-check-uniformity"> {
     `gpu.all_reduce`, a `gpu.subgroup_reduce` marked `uniform`, and a
     `gpu.warp_execute_on_lane_0`. Also reports operands that must be uniform
     across the subgroup and are not: the width of a `gpu.shuffle` and the lane
-    of a `gpu.subgroup_broadcast`. A value captured from above by a
-    `gpu.warp_execute_on_lane_0` region that is not subgroup-uniform is
-    reported as a warning, since only lane 0's value is observable there.
+    of a `gpu.subgroup_broadcast`. With `warn-captured-values`, a value
+    captured from above by a `gpu.warp_execute_on_lane_0` region that is not
+    known to be subgroup-uniform is reported as a warning, since only lane 0's
+    value is observable there.
 
     The pass fails when it reports an error. It changes nothing.
   }];
+  let options = [
+    Option<"warnCapturedValues", "warn-captured-values", "bool",
+           /*default=*/"false",
+           "Warn about values captured by a warp region that are not known to "
+           "be subgroup-uniform">
+  ];
 }
 
 #endif // MLIR_DIALECT_GPU_PASSES
