@@ -13,8 +13,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "mlir/Analysis/DataFlow/ConstantPropagationAnalysis.h"
-#include "mlir/Analysis/DataFlow/DeadCodeAnalysis.h"
+#include "mlir/Analysis/DataFlow/Utils.h"
 #include "mlir/Analysis/DataFlow/UniformityAnalysis.h"
 #include "mlir/Analysis/DataFlowFramework.h"
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
@@ -51,8 +50,7 @@ struct GpuCheckUniformityPass
 
   void runOnOperation() override {
     DataFlowSolver solver;
-    solver.load<DeadCodeAnalysis>();
-    solver.load<SparseConstantPropagation>();
+    loadBaselineAnalyses(solver);
     solver.load<UniformityAnalysis>();
     if (failed(solver.initializeAndRun(getOperation())))
       return signalPassFailure();
