@@ -74,6 +74,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   MLIRGPUUtils
   MLIRIR
   MLIRIndexDialect
+  MLIRInferUniformityOpInterface
   MLIRLLVMDialect
   MLIRMemRefDialect
   MLIRNVVMTarget

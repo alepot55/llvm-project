@@ -1,4 +1,4 @@
-//===- InferUniformityOpInterface.h - Uniformity inference ------*- C++ -*-===//
+//===- InferUniformityOpInterface.h - Uniformity ----------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -50,9 +50,6 @@ inline UniformityScope meet(UniformityScope lhs, UniformityScope rhs) {
 /// Returns the name of a scope as written in IR and diagnostics.
 StringRef stringifyUniformityScope(UniformityScope scope);
 
-/// Parses a scope name; returns `std::nullopt` if the name is unknown.
-std::optional<UniformityScope> symbolizeUniformityScope(StringRef name);
-
 raw_ostream &operator<<(raw_ostream &os, UniformityScope scope);
 
 /// The uniformity lattice value of an SSA value: a scope, or uninitialized
@@ -74,12 +71,6 @@ public:
   UniformityScope getScope() const {
     assert(!isUninitialized() && "querying an uninitialized uniformity");
     return *scope;
-  }
-
-  /// Returns true if the value is known to be the same within `at` (and
-  /// hence within every narrower scope).
-  bool isUniformAt(UniformityScope at) const {
-    return scope.has_value() && *scope >= at;
   }
 
   bool operator==(const Uniformity &rhs) const { return scope == rhs.scope; }

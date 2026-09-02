@@ -11,9 +11,9 @@ set(LLVM_OPTIONAL_SOURCES
   IndexingMapOpInterface.cpp
   InferIntDivisibilityOpInterface.cpp
   InferIntRangeInterface.cpp
-  InferUniformityOpInterface.cpp
   InferStridedMetadataInterface.cpp
   InferTypeOpInterface.cpp
+  InferUniformityOpInterface.cpp
   LoopLikeInterface.cpp
   MemOpInterfaces.cpp
   MemorySlotInterfaces.cpp
@@ -70,7 +70,6 @@ add_mlir_library(MLIRFunctionInterfaces
 add_mlir_interface_library(IndexingMapOpInterface)
 add_mlir_interface_library(InferIntDivisibilityOpInterface)
 add_mlir_interface_library(InferIntRangeInterface)
-add_mlir_interface_library(InferUniformityOpInterface)
 
 add_mlir_library(MLIRInferStridedMetadataInterface
   InferStridedMetadataInterface.cpp
@@ -87,6 +86,7 @@ add_mlir_library(MLIRInferStridedMetadataInterface
 )
 
 add_mlir_interface_library(InferTypeOpInterface)
+add_mlir_interface_library(InferUniformityOpInterface)
 
 add_mlir_library(MLIRLoopLikeInterface
   LoopLikeInterface.cpp

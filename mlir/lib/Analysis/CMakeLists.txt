@@ -58,10 +58,10 @@ add_mlir_library(MLIRAnalysis
   MLIRDialectUtils
   MLIRFunctionInterfaces
   MLIRInferIntDivisibilityOpInterface
-  MLIRInferUniformityOpInterface
   MLIRInferIntRangeInterface
   MLIRInferStridedMetadataInterface
   MLIRInferTypeOpInterface
+  MLIRInferUniformityOpInterface
   MLIRLoopLikeInterface
   MLIRPresburger
   MLIRSideEffectInterfaces

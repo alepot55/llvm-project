@@ -307,6 +307,7 @@ def GpuXeVMAttachTarget : Pass<"xevm-attach-target", ""> {
               /*default=*/[{""}],
               "Command line options passed to downstream compiler">];
 }
+
 def GpuCheckUniformityPass : Pass<"gpu-check-uniformity"> {
   let summary = "Report collective operations executed in divergent control "
                 "flow and operands that must be uniform";

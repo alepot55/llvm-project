@@ -1,4 +1,4 @@
-//===- UniformityAnalysis.h - Uniformity (divergence) analysis --*- C++ -*-===//
+//===- UniformityAnalysis.h - Uniformity analysis ---------------*- C++ -*-===//
 //
 // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 // See https://llvm.org/LICENSE.txt for license information.
@@ -168,8 +168,9 @@ UniformityScope getUniformity(DataFlowSolver &solver, Value value);
 /// the uniformity of the operands steering every enclosing region branch and
 /// every branch of a region with unstructured control flow, up to the closest
 /// enclosing callable or launch boundary (see
-/// `InferUniformityOpInterface::isLaunchBoundary`). A `gpu.barrier` whose execution uniformity is narrower
-/// than its scope may deadlock. If `narrowingOperand` is given, it receives
+/// `InferUniformityOpInterface::isLaunchBoundary`). A `gpu.barrier` whose
+/// execution uniformity is narrower than its scope may deadlock. If
+/// `narrowingOperand` is given, it receives
 /// the first control operand that narrows the execution to the returned scope,
 /// or null when nothing does.
 UniformityScope getExecutionUniformity(DataFlowSolver &solver, Operation *op,

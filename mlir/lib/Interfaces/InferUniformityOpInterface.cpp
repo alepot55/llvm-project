@@ -7,7 +7,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "mlir/Interfaces/InferUniformityOpInterface.h"
-#include "llvm/ADT/StringSwitch.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace mlir;
@@ -28,16 +27,6 @@ StringRef mlir::stringifyUniformityScope(UniformityScope scope) {
     return "uniform";
   }
   llvm_unreachable("unknown uniformity scope");
-}
-
-std::optional<UniformityScope> mlir::symbolizeUniformityScope(StringRef name) {
-  return llvm::StringSwitch<std::optional<UniformityScope>>(name)
-      .Case("divergent", UniformityScope::Divergent)
-      .Case("subgroup", UniformityScope::Subgroup)
-      .Case("workgroup", UniformityScope::Workgroup)
-      .Case("cluster", UniformityScope::Cluster)
-      .Case("uniform", UniformityScope::Uniform)
-      .Default(std::nullopt);
 }
 
 raw_ostream &mlir::operator<<(raw_ostream &os, UniformityScope scope) {
