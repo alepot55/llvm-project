@@ -11,13 +11,17 @@
 // reasoned about. Each instrumented value prints one line per executing
 // thread:
 //
-//   UNI <valueId> <claimedScope> <blockLin> <threadLin> <occurrence> <value>
+//   UNI <valueId> <claimedScope> <blockLin> <threadLin> <iteration> <value>
 //
-// `occurrence` counts, per thread, how many times that value has been defined
-// so far, so that the k-th dynamic instance of a value in a loop is compared
-// against the k-th instance in the other threads. A host-side checker groups
-// the lines by (valueId, occurrence, group) and reports the claim unsound if
-// two threads of the same group observed different values.
+// `iteration` identifies the dynamic instance: it folds the per-thread trip
+// counters of the loops enclosing the value, outermost first. Two threads that
+// entered a loop together run it in lock-step until one of them exits, so the
+// threads that report the same iteration key are exactly the threads that
+// executed that dynamic instance together, which is what the analysis makes a
+// claim about. Counting per value instead would misalign two threads that take
+// different branches of a conditional inside a loop. A host-side checker groups
+// the lines by (valueId, iteration, group) and reports the claim unsound if two
+// threads of the same group observed different values.
 //
 // The pass also writes, on stderr, one `UNIMAP <id> <scope> <location>` line
 // per instrumented value, so that a failure can be traced back to the IR.
@@ -34,8 +38,10 @@
 #include "mlir/Dialect/GPU/IR/GPUDialect.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassRegistry.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace mlir;
@@ -159,28 +165,66 @@ struct TestUniformityInstrumentationPass
     if (targets.empty())
       return;
 
-    // The prelude: the identifiers, then one thread-private counter per
-    // instrumented value.
+    // Every loop that encloses an instrumented value needs a trip counter.
+    SetVector<Operation *> loops;
+    for (Value value : targets)
+      for (Operation *loop : enclosingLoops(region, value))
+        loops.insert(loop);
+
+    // The prelude: the identifiers, then one thread-private counter per loop.
     OpBuilder builder(region.getContext());
     builder.setInsertionPointToStart(&entry);
     LaunchIds ids = buildIds(builder, loc);
     auto counterType = MemRefType::get({}, builder.getI64Type());
-    Value zero =
-        arith::ConstantOp::create(builder, loc, builder.getI64IntegerAttr(0));
-    SmallVector<Value> counters;
-    for (size_t i = 0, e = targets.size(); i < e; ++i) {
-      Value counter = memref::AllocaOp::create(builder, loc, counterType);
-      memref::StoreOp::create(builder, loc, zero, counter, ValueRange{});
-      counters.push_back(counter);
-    }
+    DenseMap<Operation *, Value> counters;
+    for (Operation *loop : loops)
+      counters[loop] = memref::AllocaOp::create(builder, loc, counterType);
     Operation *preludeEnd = &*std::prev(builder.getInsertionPoint());
 
-    for (auto [value, counter] : llvm::zip_equal(targets, counters))
-      emitProbe(solver, ids, counter, preludeEnd, value, nextId++, mapping);
+    // A counter is reset where its loop is reached, so that an inner loop
+    // starts from zero on every iteration of the outer one, and is bumped at
+    // the top of the loop body.
+    for (Operation *loop : loops) {
+      Value counter = counters[loop];
+      OpBuilder resetBuilder(loop);
+      Value zero = arith::ConstantOp::create(resetBuilder, loop->getLoc(),
+                                             resetBuilder.getI64IntegerAttr(0));
+      memref::StoreOp::create(resetBuilder, loop->getLoc(), zero, counter,
+                              ValueRange{});
+      Region *body = cast<LoopLikeOpInterface>(loop).getLoopRegions().front();
+      OpBuilder bodyBuilder(body->getContext());
+      bodyBuilder.setInsertionPointToStart(&body->front());
+      Value current = memref::LoadOp::create(bodyBuilder, loop->getLoc(),
+                                             counter, ValueRange{});
+      Value one = arith::ConstantOp::create(bodyBuilder, loop->getLoc(),
+                                            bodyBuilder.getI64IntegerAttr(1));
+      Value next =
+          arith::AddIOp::create(bodyBuilder, loop->getLoc(), current, one);
+      memref::StoreOp::create(bodyBuilder, loop->getLoc(), next, counter,
+                              ValueRange{});
+    }
+
+    for (Value value : targets)
+      emitProbe(solver, ids, counters, region, preludeEnd, value, nextId++,
+                mapping);
   }
 
-  /// Emits the per-thread counter update and the print for `value`.
-  void emitProbe(DataFlowSolver &solver, LaunchIds ids, Value counter,
+  /// The loops enclosing `value`, outermost first, within `region`.
+  static SmallVector<Operation *> enclosingLoops(Region &region, Value value) {
+    Operation *op = isa<BlockArgument>(value)
+                        ? cast<BlockArgument>(value).getOwner()->getParentOp()
+                        : value.getDefiningOp()->getParentOp();
+    SmallVector<Operation *> loops;
+    for (; op && op != region.getParentOp(); op = op->getParentOp())
+      if (isa<LoopLikeOpInterface>(op))
+        loops.push_back(op);
+    std::reverse(loops.begin(), loops.end());
+    return loops;
+  }
+
+  /// Emits the print for `value`, keyed by the iteration of its loops.
+  void emitProbe(DataFlowSolver &solver, LaunchIds ids,
+                 const DenseMap<Operation *, Value> &counters, Region &region,
                  Operation *preludeEnd, Value value, int64_t id,
                  std::string &mapping) {
     Location loc = value.getLoc();
@@ -195,12 +239,20 @@ struct TestUniformityInstrumentationPass
       builder.setInsertionPointAfter(value.getDefiningOp());
     }
 
-    Value occurrence = memref::LoadOp::create(builder, loc, counter,
-                                              ValueRange{});
-    Value one =
-        arith::ConstantOp::create(builder, loc, builder.getI64IntegerAttr(1));
-    Value next = arith::AddIOp::create(builder, loc, occurrence, one);
-    memref::StoreOp::create(builder, loc, next, counter, ValueRange{});
+    // key = fold over the enclosing loops, outermost first. A loop that runs
+    // more than `kIterationRadix` times would alias two iterations; the
+    // corpus keeps trip counts far below it.
+    constexpr int64_t kIterationRadix = 4096;
+    Value key =
+        arith::ConstantOp::create(builder, loc, builder.getI64IntegerAttr(0));
+    Value radix = arith::ConstantOp::create(
+        builder, loc, builder.getI64IntegerAttr(kIterationRadix));
+    for (Operation *loop : enclosingLoops(region, value)) {
+      Value trip = memref::LoadOp::create(builder, loc, counters.lookup(loop),
+                                          ValueRange{});
+      Value scaled = arith::MulIOp::create(builder, loc, key, radix);
+      key = arith::AddIOp::create(builder, loc, scaled, trip);
+    }
 
     UniformityScope scope = getUniformity(solver, value);
     Value idConst =
@@ -212,7 +264,7 @@ struct TestUniformityInstrumentationPass
     Value payload = toI64(builder, loc, value);
     gpu::PrintfOp::create(builder, loc, "UNI %lld %lld %lld %lld %lld %lld\n",
                           ValueRange{idConst, scopeConst, blockLin, threadLin,
-                                     occurrence, payload});
+                                     key, payload});
 
     llvm::raw_string_ostream os(mapping);
     os << "UNIMAP " << id << ' ' << stringifyUniformityScope(scope) << ' '
