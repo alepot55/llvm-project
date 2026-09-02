@@ -38,6 +38,7 @@ add_mlir_dialect_library(MLIRGPUTransforms
   Transforms/GlobalIdRewriter.cpp
   Transforms/KernelOutlining.cpp
   Transforms/IndexedAccessOpInterfaceImpl.cpp
+  Transforms/InferUniformityOpInterfaceImpl.cpp
   Transforms/MemoryPromotion.cpp
   Transforms/ModuleToBinary.cpp
   Transforms/NVVMAttachTarget.cpp
@@ -68,10 +69,12 @@ add_mlir_dialect_library(MLIRGPUTransforms
   MLIRBufferizationDialect
   MLIRDataLayoutInterfaces
   MLIRExecutionEngineUtils
+  MLIRFuncDialect
   MLIRGPUDialect
   MLIRGPUUtils
   MLIRIR
   MLIRIndexDialect
+  MLIRInferUniformityOpInterface
   MLIRLLVMDialect
   MLIRMemRefDialect
   MLIRNVVMTarget
