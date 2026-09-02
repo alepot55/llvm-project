@@ -5866,6 +5866,7 @@ cc_library(
         ":GPUUtils",
         ":IR",
         ":IndexDialect",
+        ":InferUniformityOpInterface",
         ":LLVMDialect",
         ":LLVMToLLVMIRTranslation",
         ":MemRefDialect",
