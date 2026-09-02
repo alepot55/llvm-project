@@ -20,6 +20,7 @@ add_mlir_library(MLIRTestAnalysis
   DataFlow/TestSparseBackwardDataFlowAnalysis.cpp
   DataFlow/TestStridedMetadataRangeAnalysis.cpp
   DataFlow/TestUniformityAnalysis.cpp
+  DataFlow/TestUniformityInstrumentation.cpp
 
   EXCLUDE_FROM_LIBMLIR
 
@@ -31,6 +32,7 @@ mlir_target_link_libraries(MLIRTestAnalysis PUBLIC
   MLIRAnalysis
   MLIRArithDialect
   MLIRFunctionInterfaces
+  MLIRGPUDialect
   MLIRMemRefDialect
   MLIRPass
   )
