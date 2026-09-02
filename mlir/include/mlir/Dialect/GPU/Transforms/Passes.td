@@ -307,4 +307,39 @@ def GpuXeVMAttachTarget : Pass<"xevm-attach-target", ""> {
               /*default=*/[{""}],
               "Command line options passed to downstream compiler">];
 }
+
+def GpuCheckUniformityPass : Pass<"gpu-check-uniformity"> {
+  let summary = "Report collective operations executed in divergent control "
+                "flow and operands that must be uniform";
+  let description = [{
+    Runs uniformity analysis and reports, as errors, the operations whose
+    semantics require all threads of a group to execute them together but
+    that sit in control flow steered by a value that differs within that
+    group: a `gpu.barrier` narrower than its scope (the classic deadlock), a
+    `gpu.all_reduce`, a `gpu.subgroup_reduce` marked `uniform`, a
+    `gpu.warp_execute_on_lane_0`, and a `gpu.shuffle` or `gpu.rotate`, whose
+    first `width` lanes of the subgroup must be active. Also reports operands
+    that must be uniform across the subgroup and are not: the width of a
+    `gpu.shuffle` and the lane of a `gpu.subgroup_broadcast`. With
+    `warn-captured-values`, a value captured from above by a
+    `gpu.warp_execute_on_lane_0` region that is not known to be
+    subgroup-uniform is reported as a warning, since only lane 0's value is
+    observable there.
+
+    Execution uniformity stops at the enclosing callable, so a collective
+    reached through a call from divergent control flow is not reported. The
+    analysis makes no assumption about the call sites of a function, which is
+    what keeps a `func.func` usable from several kernels; catching that case
+    needs the call graph and is not done here.
+
+    The pass fails when it reports an error. It changes nothing.
+  }];
+  let options = [
+    Option<"warnCapturedValues", "warn-captured-values", "bool",
+           /*default=*/"false",
+           "Warn about values captured by a warp region that are not known to "
+           "be subgroup-uniform">
+  ];
+}
+
 #endif // MLIR_DIALECT_GPU_PASSES
