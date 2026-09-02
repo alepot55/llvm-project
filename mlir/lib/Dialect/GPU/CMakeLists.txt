@@ -1,6 +1,7 @@
 add_mlir_dialect_library(MLIRGPUDialect
   IR/GPUDialect.cpp
   IR/InferIntRangeInterfaceImpls.cpp
+  IR/InferUniformityOpInterfaceImpls.cpp
   IR/ValueBoundsOpInterfaceImpl.cpp
 
   ADDITIONAL_HEADER_DIRS
@@ -19,6 +20,7 @@ add_mlir_dialect_library(MLIRGPUDialect
   MLIRControlFlowInterfaces
   MLIRFunctionInterfaces
   MLIRInferIntRangeInterface
+  MLIRInferUniformityOpInterface
   MLIRIR
   MLIRMathDialect
   MLIRMemRefDialect

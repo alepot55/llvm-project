@@ -19,6 +19,7 @@ include "mlir/IR/RegionKindInterface.td"
 include "mlir/Dialect/SCF/IR/DeviceMappingInterface.td"
 include "mlir/Interfaces/DestinationStyleOpInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/InferUniformityOpInterface.td"
 include "mlir/Interfaces/MemorySlotInterfaces.td"
 include "mlir/Interfaces/ParallelCombiningOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
@@ -167,6 +168,7 @@ def ForOp : SCF_Op<"for",
        ConditionallySpeculatable,
        DeclareOpInterfaceMethods<RegionBranchOpInterface,
         ["getEntrySuccessorOperands", "getSuccessorInputs"]>,
+       DeclareOpInterfaceMethods<InferUniformityOpInterface>,
        DeclareOpInterfaceMethods<PromotableRegionOpInterface>,
        SingleBlockImplicitTerminator<"scf::YieldOp">,
        RecursiveMemoryEffects]> {

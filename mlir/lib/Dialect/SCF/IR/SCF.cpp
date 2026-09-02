@@ -405,6 +405,16 @@ LogicalResult ForOp::verifyRegions() {
   return success();
 }
 
+/// The induction variable is `lb + i * step`, the same for every thread that
+/// is still iterating when the lower bound and the step are; the upper bound
+/// only decides when a thread stops.
+void ForOp::inferUniformity(ArrayRef<Uniformity> operandUniformity,
+                            SetUniformityFn setUniformity) {
+  Uniformity iv = Uniformity::join(operandUniformity[0], operandUniformity[2]);
+  if (!iv.isUninitialized())
+    setUniformity(getInductionVar(), iv.getScope());
+}
+
 std::optional<SmallVector<Value>> ForOp::getLoopInductionVars() {
   return SmallVector<Value>{getInductionVar()};
 }

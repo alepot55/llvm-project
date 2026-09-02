@@ -20,6 +20,7 @@ include "mlir/Interfaces/ControlFlowInterfaces.td"
 include "mlir/Interfaces/InferIntDivisibilityOpInterface.td"
 include "mlir/Interfaces/InferIntRangeInterface.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/InferUniformityOpInterface.td"
 include "mlir/Interfaces/LoopLikeInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
@@ -139,7 +140,8 @@ def AffineForOp : Affine_Op<"for",
       "getLoopUpperBounds", "getYieldedValuesMutable",
       "replaceWithAdditionalYields", "getStaticTripCount"]>,
      DeclareOpInterfaceMethods<RegionBranchOpInterface,
-     ["getEntrySuccessorOperands", "getSuccessorInputs"]>]> {
+     ["getEntrySuccessorOperands", "getSuccessorInputs"]>,
+     DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = "for operation";
   let description = [{
     Syntax:
