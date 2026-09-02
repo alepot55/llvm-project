@@ -30,6 +30,7 @@ add_mlir_dialect_library(MLIRGPUDialect
 
 add_mlir_dialect_library(MLIRGPUTransforms
   Transforms/AllReduceLowering.cpp
+  Transforms/AnnotateUniformCollectives.cpp
   Transforms/AsyncRegionRewriter.cpp
   Transforms/BufferDeallocationOpInterfaceImpl.cpp
   Transforms/CheckUniformity.cpp

@@ -308,6 +308,33 @@ def GpuXeVMAttachTarget : Pass<"xevm-attach-target", ""> {
               "Command line options passed to downstream compiler">];
 }
 
+def GpuAnnotateUniformCollectivesPass
+    : Pass<"gpu-annotate-uniform-collectives"> {
+  let summary = "Set the `uniform` flag on collectives proved to be executed "
+                "by all threads of their group";
+  let description = [{
+    Runs uniformity analysis and sets the `uniform` unit attribute on every
+    `gpu.subgroup_reduce` and `gpu.all_reduce` whose execution the analysis
+    proves is not narrowed below the group the collective reduces over, which
+    is exactly what the flag promises: either all threads of the group execute
+    the operation, or none do.
+
+    The flag is what lets a target replace a reduction with its
+    convergent instruction; NVIDIA's `redux.sync` is one. The folders of
+    `gpu.all_reduce` and `gpu.subgroup_reduce` already set it, but only for an
+    operation sitting directly in the entry block of a `gpu.launch`, which is
+    all `canMakeGroupOpUniform` decides. Anywhere else it has to be written by
+    hand, and nothing checks a hand-written one: the lowering it enables states
+    that running the operation with part of the subgroup is undefined
+    behaviour. Use `gpu-check-uniformity` to report the flags a source got
+    wrong, and this pass to obtain the ones it did not write.
+
+    An operation that already carries the flag is left alone, since the flag
+    may record a fact the analysis cannot see.
+  }];
+  let dependentDialects = ["gpu::GPUDialect"];
+}
+
 def GpuCheckUniformityPass : Pass<"gpu-check-uniformity"> {
   let summary = "Report collective operations executed in divergent control "
                 "flow and operands that must be uniform";
