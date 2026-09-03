@@ -2800,6 +2800,18 @@ bool AffineForOp::matchingBoundOperandList() {
 
 SmallVector<Region *> AffineForOp::getLoopRegions() { return {&getRegion()}; }
 
+/// The induction variable is a function of the lower bound operands and of
+/// the step, which is an attribute; the upper bound only decides when a thread
+/// stops iterating.
+void AffineForOp::inferUniformity(ArrayRef<Uniformity> operandUniformity,
+                                  SetUniformityFn setUniformity) {
+  Uniformity iv = Uniformity::getUniform();
+  for (const Uniformity &operand :
+       operandUniformity.take_front(getLowerBoundOperands().size()))
+    iv = Uniformity::join(iv, operand);
+  setUniformity(getInductionVar(), iv.getScope());
+}
+
 std::optional<SmallVector<Value>> AffineForOp::getLoopInductionVars() {
   return SmallVector<Value>{getInductionVar()};
 }

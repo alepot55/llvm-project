@@ -16,6 +16,7 @@ add_mlir_dialect_library(MLIRSCFDialect
   MLIRDialectUtils
   MLIRFunctionInterfaces
   MLIRIR
+  MLIRInferUniformityOpInterface
   MLIRLoopLikeInterface
   MLIRMemorySlotUtils
   MLIRSideEffectInterfaces
