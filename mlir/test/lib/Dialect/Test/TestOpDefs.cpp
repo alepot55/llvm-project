@@ -12,6 +12,7 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Verifier.h"
 #include "mlir/Interfaces/FunctionImplementation.h"
+#include "mlir/Interfaces/InferUniformityOpInterface.h"
 #include "mlir/Interfaces/MemorySlotInterfaces.h"
 #include "llvm/ADT/SmallVectorExtras.h"
 
@@ -947,6 +948,55 @@ void TestWithoutBoundsOp::inferResultRangesFromOptional(
   // Mimic ops with uninitialized range.
   setResultRanges(getResult(), IntegerValueRange{});
 }
+
+//===----------------------------------------------------------------------===//
+// TestWithUniformityOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult TestWithUniformityOp::verify() {
+  if (!symbolizeUniformityScope(getScope()))
+    return emitOpError("unknown uniformity scope \"") << getScope() << "\"";
+  return success();
+}
+
+void TestWithUniformityOp::inferUniformity(ArrayRef<Uniformity>,
+                                           SetUniformityFn setUniformity) {
+  setUniformity(getResult(), *symbolizeUniformityScope(getScope()));
+}
+
+//===----------------------------------------------------------------------===//
+// TestUniformityOfOp
+//===----------------------------------------------------------------------===//
+
+void TestUniformityOfOp::inferUniformity(ArrayRef<Uniformity> operandUniformity,
+                                         SetUniformityFn setUniformity) {
+  if (!operandUniformity[0].isUninitialized())
+    setUniformity(getSame(), operandUniformity[0].getScope());
+  setUniformity(getOther(), UniformityScope::Divergent);
+}
+
+//===----------------------------------------------------------------------===//
+// TestUniformityLaunchOp
+//===----------------------------------------------------------------------===//
+
+LogicalResult TestUniformityLaunchOp::verify() {
+  if (getScopes().size() != getBody().getNumArguments())
+    return emitOpError("expected one scope per body argument");
+  for (Attribute scope : getScopes())
+    if (!symbolizeUniformityScope(cast<StringAttr>(scope).getValue()))
+      return emitOpError("unknown uniformity scope ") << scope;
+  return success();
+}
+
+void TestUniformityLaunchOp::inferUniformity(ArrayRef<Uniformity>,
+                                             SetUniformityFn setUniformity) {
+  for (auto [argument, scope] :
+       llvm::zip_equal(getBody().getArguments(), getScopes()))
+    setUniformity(argument, *symbolizeUniformityScope(
+                                cast<StringAttr>(scope).getValue()));
+}
+
+bool TestUniformityLaunchOp::isLaunchBoundary() { return true; }
 
 //===----------------------------------------------------------------------===//
 // TestWithBoundsRegionOp
