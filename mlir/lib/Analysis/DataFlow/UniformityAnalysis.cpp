@@ -119,9 +119,9 @@ void mlir::dataflow::getEnclosingControlOperands(
 //===----------------------------------------------------------------------===//
 
 static const StringRef kDefaultTransparentDialects[] = {
-    "affine",  "arith", "bufferization", "builtin", "cf",
-    "complex", "func",  "index",         "linalg",  "math",
-    "memref",  "scf",   "tensor",        "ub",      "vector"};
+    "affine", "arith",  "bufferization", "builtin", "cf",  "complex", "func",
+    "index",  "linalg", "math",          "memref",  "scf", "spirv",   "tensor",
+    "ub",     "vector"};
 
 ArrayRef<StringRef> UniformityAnalysis::getDefaultTransparentDialects() {
   return kDefaultTransparentDialects;

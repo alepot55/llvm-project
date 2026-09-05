@@ -49,7 +49,8 @@ public:
 ///   dialect computes a function of its operands, so its results are the join
 ///   of the operands (uniform when it has none). The default set of
 ///   transparent dialects is the one of the core dialects that have no notion
-///   of a thread.
+///   of a thread, and `spirv`, whose operations that are not a function of
+///   their operands implement the interface.
 /// - Any other operation defines divergent values: an operation that reads
 ///   memory, an operation whose regions may capture values from above without
 ///   region control flow (a `linalg.generic`), and an operation of a dialect
@@ -83,7 +84,7 @@ public:
 
   /// The dialects treated as transparent by default: `affine`, `arith`,
   /// `bufferization`, `builtin`, `cf`, `complex`, `func`, `index`, `linalg`,
-  /// `math`, `memref`, `scf`, `tensor`, `ub` and `vector`.
+  /// `math`, `memref`, `scf`, `spirv`, `tensor`, `ub` and `vector`.
   static ArrayRef<StringRef> getDefaultTransparentDialects();
 
   LogicalResult initialize(Operation *top) override;

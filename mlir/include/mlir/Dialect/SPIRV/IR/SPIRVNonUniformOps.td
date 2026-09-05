@@ -14,11 +14,14 @@
 #ifndef MLIR_DIALECT_SPIRV_IR_NON_UNIFORM_OPS
 #define MLIR_DIALECT_SPIRV_IR_NON_UNIFORM_OPS
 
+include "mlir/Interfaces/InferUniformityOpInterface.td"
+
 // -----
 
 class SPIRV_GroupNonUniformArithmeticOp<string mnemonic, Type type,
       list<Trait> traits = []> : SPIRV_Op<mnemonic, !listconcat([
-        SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>
+        SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+        DeclareOpInterfaceMethods<InferUniformityOpInterface>
       ], traits)> {
 
   let arguments = (ins
@@ -42,7 +45,8 @@ class SPIRV_GroupNonUniformArithmeticOp<string mnemonic, Type type,
 // -----
 
 def SPIRV_GroupNonUniformBallotOp : SPIRV_Op<"GroupNonUniformBallot",[
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is a bitfield value combining the Predicate value from all
@@ -98,7 +102,8 @@ def SPIRV_GroupNonUniformBallotOp : SPIRV_Op<"GroupNonUniformBallot",[
 // -----
 
 def SPIRV_GroupNonUniformBallotFindLSBOp : SPIRV_Op<"GroupNonUniformBallotFindLSB", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Find the least significant bit set to 1 in Value, considering only the
@@ -158,7 +163,8 @@ def SPIRV_GroupNonUniformBallotFindLSBOp : SPIRV_Op<"GroupNonUniformBallotFindLS
 // -----
 
 def SPIRV_GroupNonUniformBallotFindMSBOp : SPIRV_Op<"GroupNonUniformBallotFindMSB", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Find the most significant bit set to 1 in Value, considering only the
@@ -219,7 +225,8 @@ def SPIRV_GroupNonUniformBallotFindMSBOp : SPIRV_Op<"GroupNonUniformBallotFindMS
 
 def SPIRV_GroupNonUniformBroadcastOp : SPIRV_Op<"GroupNonUniformBroadcast", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the Value of the invocation identified by the id Id to all
@@ -280,7 +287,8 @@ def SPIRV_GroupNonUniformBroadcastOp : SPIRV_Op<"GroupNonUniformBroadcast", [
 
 def SPIRV_GroupNonUniformBroadcastFirstOp : SPIRV_Op<"GroupNonUniformBroadcastFirst", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Broadcast the value from the active invocation with the lowest id in
@@ -335,7 +343,8 @@ def SPIRV_GroupNonUniformBroadcastFirstOp : SPIRV_Op<"GroupNonUniformBroadcastFi
 // -----
 
 def SPIRV_GroupNonUniformElectOp : SPIRV_Op<"GroupNonUniformElect", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is true only in the active invocation with the lowest id in the
@@ -756,7 +765,8 @@ def SPIRV_GroupNonUniformSMinOp : SPIRV_GroupNonUniformArithmeticOp<"GroupNonUni
 
 def SPIRV_GroupNonUniformShuffleOp : SPIRV_Op<"GroupNonUniformShuffle", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the Value of the invocation identified by the id Id.
@@ -810,7 +820,8 @@ def SPIRV_GroupNonUniformShuffleOp : SPIRV_Op<"GroupNonUniformShuffle", [
 
 def SPIRV_GroupNonUniformShuffleDownOp : SPIRV_Op<"GroupNonUniformShuffleDown", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the Value of the invocation identified by the current
@@ -867,7 +878,8 @@ def SPIRV_GroupNonUniformShuffleDownOp : SPIRV_Op<"GroupNonUniformShuffleDown", 
 
 def SPIRV_GroupNonUniformShuffleUpOp : SPIRV_Op<"GroupNonUniformShuffleUp", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the Value of the invocation identified by the current
@@ -923,7 +935,8 @@ def SPIRV_GroupNonUniformShuffleUpOp : SPIRV_Op<"GroupNonUniformShuffleUp", [
 
 def SPIRV_GroupNonUniformShuffleXorOp : SPIRV_Op<"GroupNonUniformShuffleXor", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the Value of the invocation identified by the current
@@ -1374,7 +1387,8 @@ def SPIRV_GroupNonUniformLogicalXorOp :
 // -----
 
 def SPIRV_GroupNonUniformBallotBitCountOp : SPIRV_Op<"GroupNonUniformBallotBitCount", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Result is the number of bits that are set to 1 in Value, considering
@@ -1440,7 +1454,8 @@ def SPIRV_GroupNonUniformBallotBitCountOp : SPIRV_Op<"GroupNonUniformBallotBitCo
 
 def SPIRV_GroupNonUniformRotateKHROp : SPIRV_Op<"GroupNonUniformRotateKHR", [
   Pure, AllTypesMatch<["value", "result"]>,
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Rotate values across invocations within a subgroup.
@@ -1515,7 +1530,8 @@ def SPIRV_GroupNonUniformRotateKHROp : SPIRV_Op<"GroupNonUniformRotateKHR", [
 // -----
 
 def SPIRV_GroupNonUniformAllOp : SPIRV_Op<"GroupNonUniformAll", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Evaluates a predicate for all tangled invocations within the Execution
@@ -1571,7 +1587,8 @@ def SPIRV_GroupNonUniformAllOp : SPIRV_Op<"GroupNonUniformAll", [
 // -----
 
 def SPIRV_GroupNonUniformAnyOp : SPIRV_Op<"GroupNonUniformAny", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Evaluates a predicate for all tangled invocations within the Execution
@@ -1627,7 +1644,8 @@ def SPIRV_GroupNonUniformAnyOp : SPIRV_Op<"GroupNonUniformAny", [
 // -----
 
 def SPIRV_GroupNonUniformAllEqualOp : SPIRV_Op<"GroupNonUniformAllEqual", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Evaluates a value for all tangled invocations within the Execution
@@ -1688,7 +1706,8 @@ def SPIRV_GroupNonUniformAllEqualOp : SPIRV_Op<"GroupNonUniformAllEqual", [
 // -----
 
 def SPIRV_GroupNonUniformQuadSwapOp : SPIRV_Op<"GroupNonUniformQuadSwap", [
-  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>, AllTypesMatch<["value", "result"]>]> {
+  SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Subgroup"]>, AllTypesMatch<["value", "result"]>,
+  DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
 
   let summary = [{
     Swap the Value of the invocation within the quad with another invocation

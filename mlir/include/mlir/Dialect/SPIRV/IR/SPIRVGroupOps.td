@@ -15,11 +15,14 @@
 #ifndef MLIR_DIALECT_SPIRV_IR_GROUP_OPS
 #define MLIR_DIALECT_SPIRV_IR_GROUP_OPS
 
+include "mlir/Interfaces/InferUniformityOpInterface.td"
+
 // -----
 
 def SPIRV_GroupFMulKHROp : SPIRV_KhrVendorOp<"GroupFMul", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A floating-point multiplication group operation specified for all values of
     'X' specified by invocations in the group.
@@ -77,7 +80,8 @@ def SPIRV_GroupFMulKHROp : SPIRV_KhrVendorOp<"GroupFMul", [Pure,
 def SPIRV_GroupBroadcastOp : SPIRV_Op<"GroupBroadcast",
                               [Pure,
                                AllTypesMatch<["value", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     Broadcast the Value of the invocation identified by the local id LocalId
     to the result of all invocations in the group.
@@ -140,7 +144,8 @@ def SPIRV_GroupBroadcastOp : SPIRV_Op<"GroupBroadcast",
 
 def SPIRV_GroupFAddOp : SPIRV_Op<"GroupFAdd", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A floating-point add group operation specified for all values of X
     specified by invocations in the group.
@@ -196,7 +201,8 @@ def SPIRV_GroupFAddOp : SPIRV_Op<"GroupFAdd", [Pure,
 
 def SPIRV_GroupFMaxOp : SPIRV_Op<"GroupFMax", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A floating-point maximum group operation specified for all values of X
     specified by invocations in the group.
@@ -252,7 +258,8 @@ def SPIRV_GroupFMaxOp : SPIRV_Op<"GroupFMax", [Pure,
 
 def SPIRV_GroupFMinOp : SPIRV_Op<"GroupFMin", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A floating-point minimum group operation specified for all values of X
     specified by invocations in the group.
@@ -308,7 +315,8 @@ def SPIRV_GroupFMinOp : SPIRV_Op<"GroupFMin", [Pure,
 
 def SPIRV_GroupIAddOp : SPIRV_Op<"GroupIAdd", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     An integer add group operation specified for all values of X specified
     by invocations in the group.
@@ -364,7 +372,8 @@ def SPIRV_GroupIAddOp : SPIRV_Op<"GroupIAdd", [Pure,
 
 def SPIRV_GroupIMulKHROp : SPIRV_KhrVendorOp<"GroupIMul", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     An integer multiplication group operation specified for all values of 'X'
     specified by invocations in the group.
@@ -420,7 +429,8 @@ def SPIRV_GroupIMulKHROp : SPIRV_KhrVendorOp<"GroupIMul", [Pure,
 
 def SPIRV_GroupSMaxOp : SPIRV_Op<"GroupSMax", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A signed integer maximum group operation specified for all values of X
     specified by invocations in the group.
@@ -477,7 +487,8 @@ def SPIRV_GroupSMaxOp : SPIRV_Op<"GroupSMax", [Pure,
 
 def SPIRV_GroupSMinOp : SPIRV_Op<"GroupSMin", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     A signed integer minimum group operation specified for all values of X
     specified by invocations in the group.
@@ -534,7 +545,8 @@ def SPIRV_GroupSMinOp : SPIRV_Op<"GroupSMin", [Pure,
 
 def SPIRV_GroupUMaxOp : SPIRV_Op<"GroupUMax", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     An unsigned integer maximum group operation specified for all values of
     X specified by invocations in the group.
@@ -590,7 +602,8 @@ def SPIRV_GroupUMaxOp : SPIRV_Op<"GroupUMax", [Pure,
 
 def SPIRV_GroupUMinOp : SPIRV_Op<"GroupUMin", [Pure,
                                AllTypesMatch<["x", "result"]>,
-                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>]> {
+                               SPIRV_ExecutionScopeAttrIs<"execution_scope", ["Workgroup", "Subgroup"]>,
+                               DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = [{
     An unsigned integer minimum group operation specified for all values of
     X specified by invocations in the group.
@@ -751,7 +764,8 @@ def SPIRV_INTELSubgroupBlockWriteOp : SPIRV_IntelVendorOp<"SubgroupBlockWrite", 
 
 // -----
 
-def SPIRV_KHRSubgroupBallotOp : SPIRV_KhrVendorOp<"SubgroupBallot", []> {
+def SPIRV_KHRSubgroupBallotOp : SPIRV_KhrVendorOp<"SubgroupBallot", [
+    DeclareOpInterfaceMethods<InferUniformityOpInterface>]> {
   let summary = "See extension SPV_KHR_shader_ballot";
 
   let description = [{

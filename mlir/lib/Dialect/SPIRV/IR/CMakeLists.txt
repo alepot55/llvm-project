@@ -11,6 +11,7 @@ add_mlir_dialect_library(MLIRSPIRVDialect
   DotProductOps.cpp
   GroupOps.cpp
   ImageOps.cpp
+  InferUniformityOpInterfaceImpls.cpp
   MemoryOps.cpp
   MeshOps.cpp
   SPIRVAttributes.cpp
@@ -43,6 +44,7 @@ add_mlir_dialect_library(MLIRSPIRVDialect
   LINK_LIBS PUBLIC
   MLIRControlFlowInterfaces
   MLIRFunctionInterfaces
+  MLIRInferUniformityOpInterface
   MLIRIR
   MLIRParser
   MLIRSideEffectInterfaces
